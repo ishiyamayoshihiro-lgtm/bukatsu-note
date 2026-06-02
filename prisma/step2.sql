@@ -1,0 +1,11 @@
+UPDATE "User" SET role = 'STAFF' WHERE role = 'COACH';
+UPDATE "User" SET role = 'MEMBER' WHERE role = 'STUDENT';
+UPDATE "InvitedUser" SET role = 'STAFF' WHERE role = 'COACH';
+UPDATE "InvitedUser" SET role = 'MEMBER' WHERE role = 'STUDENT';
+CREATE TYPE "Role_new" AS ENUM ('STAFF', 'MANAGER', 'MEMBER');
+ALTER TABLE "User" ALTER COLUMN role DROP DEFAULT;
+ALTER TABLE "User" ALTER COLUMN role TYPE "Role_new" USING role::text::"Role_new";
+ALTER TABLE "User" ALTER COLUMN role SET DEFAULT 'MEMBER'::"Role_new";
+ALTER TABLE "InvitedUser" ALTER COLUMN role TYPE "Role_new" USING role::text::"Role_new";
+DROP TYPE "Role";
+ALTER TYPE "Role_new" RENAME TO "Role";

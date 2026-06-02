@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Select-Object FullName)",
+      "PowerShell(Get-Process *)",
+      "Bash(Remove-Item \"C:\\\\bukatsu-note\\\\src\\\\components\\\\coach\\\\BaseFieldManager.tsx\" -Force)",
+      "Bash(Remove-Item \"C:\\\\bukatsu-note\\\\src\\\\components\\\\coach\\\\CustomFieldManager.tsx\" -Force)",
+      "Bash(Write-Host \"Deleted\")",
+      "PowerShell($resp = Invoke-WebRequest -Uri \"http://localhost:3000/coach/settings\" -UseBasicParsing -TimeoutSec 30 2>&1; Write-Host \"Status: $\\($resp.StatusCode\\)\")",
+      "PowerShell($resp = Invoke-WebRequest -Uri \"http://localhost:3000/student\" -UseBasicParsing -TimeoutSec 30 2>&1; Write-Host \"Status: $\\($resp.StatusCode\\)\")",
+      "PowerShell(Invoke-WebRequest -Uri \"http://localhost:3000/student\" -UseBasicParsing -TimeoutSec 15 | Select-Object StatusCode, StatusDescription)",
+      "PowerShell(Invoke-WebRequest -Uri \"http://localhost:3000/coach/settings\" -UseBasicParsing -TimeoutSec 20 | Select-Object StatusCode)",
+      "PowerShell(Start-Sleep -Seconds 2; Invoke-WebRequest -Uri \"http://localhost:3000/student\" -UseBasicParsing -TimeoutSec 20 | Select-Object StatusCode)",
+      "PowerShell(Start-Sleep -Seconds 2; Invoke-WebRequest -Uri \"http://localhost:3000/coach/settings\" -UseBasicParsing -TimeoutSec 20 | Select-Object StatusCode)",
+      "PowerShell(Out-Null *)",
+      "Bash(Test-Path C:\\\\bukatsu-note *)",
+      "PowerShell(robocopy \"G:\\\\マイドライブ\\\\DB\\\\App\\\\部活ノート\" \"C:\\\\bukatsu-note\" /E /XD node_modules .next /NFL /NDL /NJH /NJS)",
+      "Bash(vercel deploy *)",
+      "PowerShell(Stop-Process *)",
+      "WebFetch(domain:docs.google.com)"
+    ]
+  }
+}
