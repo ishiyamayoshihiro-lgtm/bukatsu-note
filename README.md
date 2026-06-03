@@ -358,3 +358,67 @@ Account / Session / VerificationToken（NextAuth 管理）─────
 | `NEXTAUTH_SECRET` エラー | `.env` に値がない | 上記の生成コマンドで設定 |
 | 生徒で教員画面に入ろうとすると `/error` | ミドルウェアが正常に動作している | 正常動作です |
 | `npm install` でエラー | peer deps の不一致 | `--legacy-peer-deps` を付けて実行 |
+
+---
+
+## 現在の問題と対応状況（2026-06-03）
+
+### 報告されたエラー
+
+1. **404 NOT_FOUND エラー**
+   - 現象: ログイン時に「404 NOT_FOUND」が表示される
+   - 原因：NextAuth.js API ルート（`/api/auth/[...nextauth]/route.ts`）が見つからない
+   - 状況：調査中
+
+2. **ログイン時の Google OAuth エラー**
+   - 現象: 「アクセスをブロック: bukatsu-note のリクエストは Google のポリシーに準拠していません」（エラー403: disallowed_useragent）
+   - 原因：Google Cloud Console の OAuth 設定にあるリダイレクト URI とアプリケーション側の URL が一致していない
+   - 対応済み：
+     - ✅ Google Cloud Console に `https://note.vercel.app/api/auth/callback/google` を追加
+     - ✅ Google Cloud Console に `https://bukatsu-note.vercel.app/api/auth/callback/google` も登録済み（デフォルト）
+   - 未対応：両方の URI が Google OAuth に登録されているか確認が必要
+
+3. **提出エラー（解決済み v0.1.4）**
+   - 現象: 学生が日誌を提出しようとすると「Application error: a server-side exception has occurred」
+   - 原因：`createLog` アクション内で `revalidatePath('/coach')` を呼び出していた（学生は `/coach` アクセス権限なし）
+   - 対応：`/student` のみを再検証するように修正 → **デプロイ完了**
+
+### Vercel 環境変数設定の問題
+
+**問題：** `NEXTAUTH_URL` を Vercel ダッシュボードで `https://bukatsu-note.vercel.app` に設定しても、再度確認すると `https://example.com` にリセットされる
+
+**原因調査済み：**
+- ✅ GitHub Secrets には何も設定されていない（GitHub Workflow で上書きされていない）
+- ✅ `.gitignore` で `.env` は除外されている（ファイル不具合でない）
+
+**現在の対応：**
+- Vercel CLI を使用して、ダッシュボード UI をバイパスして環境変数を設定中
+  ```powershell
+  vercel env add NEXTAUTH_URL production --value "https://bukatsu-note.vercel.app" --yes
+  ```
+
+### 次のステップ（明日以降）
+
+1. **Vercel CLI での環境変数設定が完了したか確認**
+   - Vercel ダッシュボードで `NEXTAUTH_URL` が正しく保存されているか確認
+   - Vercel が自動的に再デプロイするのを待つ
+
+2. **ドメイン URL の統一**
+   - 現在 `note.vercel.app` と `bukatsu-note.vercel.app` の 2 つの URL が存在
+   - どちらかに統一するか、両方対応するかを決定
+   - Google Cloud Console での OAuth リダイレクト URI も統一が必要
+
+3. **本番環境でのテスト**
+   - ログインが成功するか確認（Google OAuth の 403 エラーが解消されたか）
+   - 提出が正常に機能するか確認（v0.1.4 の修正が有効か）
+   - 複数の生徒でテストして、特定の生徒だけに問題がないか確認
+
+4. **Google Cloud Console での検証（Verification）状況確認**
+   - OAuth consent screen の検証状況が「Verified」か「Unverified」か確認
+   - 未検証の場合は、Google に申請（時間がかかる可能性）
+
+### コミット履歴（本日）
+
+- `v0.1.4`: Fix submission error - `revalidatePath('/coach')` 削除
+- `v0.1.5`: Improve JWT callback - `upsert` 導入 + エラーログ追加
+- `v0.1.6`: Fix domain URL - `vercel.json` から `NEXTAUTH_URL` 削除、`.env` 修正
