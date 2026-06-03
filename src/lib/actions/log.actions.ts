@@ -68,7 +68,6 @@ export async function createLog(_prev: LogFormState, formData: FormData): Promis
   }
 
   revalidatePath('/student')
-  revalidatePath('/coach')
   return { success: true }
 }
 

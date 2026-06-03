@@ -68,14 +68,14 @@ export async function insertColumn(colIndex: number): Promise<void> {
   const sheet = spreadsheet.data.sheets?.find((s) => s.properties?.title === SHEET_NAME)
   const sheetId = sheet?.properties?.sheetId
 
-  if (sheetId === undefined) {
+  if (sheetId === undefined || sheetId === null) {
     throw new Error(`シート「${SHEET_NAME}」が見つかりません`)
   }
 
   // 列挿入リクエスト
-  await sheets.spreadsheets.batchUpdate({
-    spreadsheetId,
-    requestBody: {
+  await sheets.spreadsheets.batchUpdate(
+    { spreadsheetId } as any,
+    {
       requests: [
         {
           insertDimension: {
@@ -88,8 +88,8 @@ export async function insertColumn(colIndex: number): Promise<void> {
           },
         },
       ],
-    },
-  })
+    } as any
+  )
 }
 
 export async function insertColumnWithFormat(colIndex: number, sourceColIndex: number): Promise<void> {
@@ -105,14 +105,14 @@ export async function insertColumnWithFormat(colIndex: number, sourceColIndex: n
   const sheet = spreadsheet.data.sheets?.find((s) => s.properties?.title === SHEET_NAME)
   const sheetId = sheet?.properties?.sheetId
 
-  if (sheetId === undefined) {
+  if (sheetId === undefined || sheetId === null) {
     throw new Error(`シート「${SHEET_NAME}」が見つかりません`)
   }
 
   // 列挿入 + 書式コピー
-  await sheets.spreadsheets.batchUpdate({
-    spreadsheetId,
-    requestBody: {
+  await sheets.spreadsheets.batchUpdate(
+    { spreadsheetId } as any,
+    {
       requests: [
         {
           insertDimension: {
@@ -142,8 +142,8 @@ export async function insertColumnWithFormat(colIndex: number, sourceColIndex: n
           },
         },
       ],
-    },
-  })
+    } as any
+  )
 }
 
 export async function getSheetId(): Promise<number> {
@@ -158,7 +158,7 @@ export async function getSheetId(): Promise<number> {
   const sheet = spreadsheet.data.sheets?.find((s) => s.properties?.title === SHEET_NAME)
   const sheetId = sheet?.properties?.sheetId
 
-  if (sheetId === undefined) {
+  if (sheetId === undefined || sheetId === null) {
     throw new Error(`シート「${SHEET_NAME}」が見つかりません`)
   }
 
