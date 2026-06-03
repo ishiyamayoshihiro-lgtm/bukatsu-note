@@ -28,7 +28,12 @@ export const authOptions: NextAuthOptions = {
       // 1. ドメイン検証
       if (!email.endsWith(`@${ALLOWED_DOMAIN}`)) return false
 
-      // 2. 招待ホワイトリスト検証
+      // 2. 招待ホワイトリスト検証（STAFF は不要）
+      const role = determineRole(email)
+      if (role === Role.STAFF) {
+        return true
+      }
+
       const invited = await prisma.invitedUser.findUnique({ where: { email } })
       if (!invited) return false
 
@@ -36,30 +41,35 @@ export const authOptions: NextAuthOptions = {
     },
 
     async jwt({ token, account }) {
-      // account が存在する = 新規ログイン or トークン再発行
-      if (account && token.email) {
-        const email = token.email
-        const role = determineRole(email)
+      try {
+        // account が存在する = 新規ログイン or トークン再発行
+        if (account && token.email) {
+          const email = token.email
+          const role = determineRole(email)
 
-        // ロールをDBに反映（Prisma Adapter がユーザーを作成した後）
-        const dbUser = await prisma.user.update({
-          where: { email },
-          data: { role },
-          select: { id: true, role: true },
-        })
+          // ロールをDBに反映（Prisma Adapter がユーザーを作成した後）
+          const dbUser = await prisma.user.upsert({
+            where: { email },
+            update: { role },
+            create: { email, role },
+            select: { id: true, role: true },
+          })
 
-        token.userId = dbUser.id
-        token.role = dbUser.role
-      } else if (!token.userId && token.email) {
-        // トークンリフレッシュ時: DBから取得
-        const dbUser = await prisma.user.findUnique({
-          where: { email: token.email },
-          select: { id: true, role: true },
-        })
-        if (dbUser) {
           token.userId = dbUser.id
           token.role = dbUser.role
+        } else if (!token.userId && token.email) {
+          // トークンリフレッシュ時: DBから取得
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email },
+            select: { id: true, role: true },
+          })
+          if (dbUser) {
+            token.userId = dbUser.id
+            token.role = dbUser.role
+          }
         }
+      } catch (error) {
+        console.error('JWT callback error:', error)
       }
       return token
     },
