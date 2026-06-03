@@ -23,20 +23,36 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user }) {
       const email = user.email
-      if (!email) return false
+      if (!email) {
+        console.warn('[signIn] No email provided')
+        return false
+      }
 
       // 1. ドメイン検証
-      if (!email.endsWith(`@${ALLOWED_DOMAIN}`)) return false
+      if (!email.endsWith(`@${ALLOWED_DOMAIN}`)) {
+        console.warn(`[signIn] Invalid domain: ${email}`)
+        return false
+      }
 
       // 2. 招待ホワイトリスト検証（STAFF は不要）
       const role = determineRole(email)
       if (role === Role.STAFF) {
+        console.info(`[signIn] STAFF user allowed: ${email}`)
         return true
       }
 
-      const invited = await prisma.invitedUser.findUnique({ where: { email } })
-      if (!invited) return false
+      try {
+        const invited = await prisma.invitedUser.findUnique({ where: { email } })
+        if (!invited) {
+          console.warn(`[signIn] User not in invited list: ${email}`)
+          return false
+        }
+      } catch (error) {
+        console.error(`[signIn] Database error for ${email}:`, error)
+        return false
+      }
 
+      console.info(`[signIn] MEMBER user allowed: ${email}`)
       return true
     },
 
