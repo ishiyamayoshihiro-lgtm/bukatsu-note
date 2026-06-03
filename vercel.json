@@ -1,4 +1,7 @@
 {
+  "env": {
+    "NEXTAUTH_URL": "https://note.vercel.app"
+  },
   "crons": [
     {
       "path": "/api/cron/sync-submission",
