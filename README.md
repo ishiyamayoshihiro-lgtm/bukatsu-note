@@ -397,28 +397,24 @@ Account / Session / VerificationToken（NextAuth 管理）─────
   vercel env add NEXTAUTH_URL production --value "https://bukatsu-note.vercel.app" --yes
   ```
 
-### 次のステップ（明日以降）
+### 次のステップ
 
-1. **Vercel CLI での環境変数設定が完了したか確認**
-   - Vercel ダッシュボードで `NEXTAUTH_URL` が正しく保存されているか確認
-   - Vercel が自動的に再デプロイするのを待つ
+1. **本番環境でのテスト（v0.1.6 デプロイ後）**
+   - 提出ボタンを押してテスト（エラーメッセージがより詳しく表示されるようになります）
+   - エラーが発生した場合、ブラウザのコンソールで詳細なエラーメッセージを確認
+   - 複数の生徒でテストして、特定の生徒だけに問題がないか確認
 
 2. **ドメイン URL の統一**
    - 現在 `note.vercel.app` と `bukatsu-note.vercel.app` の 2 つの URL が存在
    - どちらかに統一するか、両方対応するかを決定
    - Google Cloud Console での OAuth リダイレクト URI も統一が必要
 
-3. **本番環境でのテスト**
-   - ログインが成功するか確認（Google OAuth の 403 エラーが解消されたか）
-   - 提出が正常に機能するか確認（v0.1.4 の修正が有効か）
-   - 複数の生徒でテストして、特定の生徒だけに問題がないか確認
-
-4. **Google Cloud Console での検証（Verification）状況確認**
+3. **Google Cloud Console での検証（Verification）状況確認**
    - OAuth consent screen の検証状況が「Verified」か「Unverified」か確認
    - 未検証の場合は、Google に申請（時間がかかる可能性）
 
-### コミット履歴（本日）
+### コミット履歴
 
 - `v0.1.4`: Fix submission error - `revalidatePath('/coach')` 削除
 - `v0.1.5`: Improve JWT callback - `upsert` 導入 + エラーログ追加
-- `v0.1.6`: Fix domain URL - `vercel.json` から `NEXTAUTH_URL` 削除、`.env` 修正
+- `v0.1.6` (2026-06-11): Improve error handling - createLog アクションにエラーハンドリングを追加して詳しいエラーメッセージをログに記録
