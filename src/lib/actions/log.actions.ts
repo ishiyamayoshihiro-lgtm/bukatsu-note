@@ -24,51 +24,64 @@ export type LogFormState = {
 }
 
 export async function createLog(_prev: LogFormState, formData: FormData): Promise<LogFormState> {
-  const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== Role.MEMBER) {
-    return { error: '権限がありません' }
-  }
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session) {
+      console.error('[createLog] No session')
+      return { error: 'セッションが存在しません' }
+    }
 
-  const raw = {
-    date: formData.get('date'),
-    trainingContent: formData.get('trainingContent'),
-    reflection: formData.get('reflection'),
-    task: formData.get('task'),
-    sleepTime: formData.get('sleepTime'),
-    fatigue: formData.get('fatigue'),
-    injury: formData.get('injury') === 'on',
-    mental: formData.get('mental'),
-  }
+    if (session.user.role !== Role.MEMBER) {
+      console.error(`[createLog] Invalid role: ${session.user.role}`)
+      return { error: '権限がありません' }
+    }
 
-  const parsed = LogSchema.safeParse(raw)
-  if (!parsed.success) {
-    return { error: parsed.error.errors[0].message }
-  }
+    const raw = {
+      date: formData.get('date'),
+      trainingContent: formData.get('trainingContent'),
+      reflection: formData.get('reflection'),
+      task: formData.get('task'),
+      sleepTime: formData.get('sleepTime'),
+      fatigue: formData.get('fatigue'),
+      injury: formData.get('injury') === 'on',
+      mental: formData.get('mental'),
+    }
 
-  const { date, ...rest } = parsed.data
+    const parsed = LogSchema.safeParse(raw)
+    if (!parsed.success) {
+      console.error('[createLog] Validation error:', parsed.error.errors)
+      return { error: parsed.error.errors[0].message }
+    }
 
-  // 同日の日誌が既にある場合は上書き
-  const existing = await prisma.log.findFirst({
-    where: { studentId: session.user.id, date: new Date(date) },
-  })
+    const { date, ...rest } = parsed.data
 
-  if (existing) {
-    await prisma.log.update({
-      where: { id: existing.id },
-      data: { ...rest, date: new Date(date) },
+    // 同日の日誌が既にある場合は上書き
+    const existing = await prisma.log.findFirst({
+      where: { studentId: session.user.id, date: new Date(date) },
     })
-  } else {
-    await prisma.log.create({
-      data: {
-        studentId: session.user.id,
-        date: new Date(date),
-        ...rest,
-      },
-    })
-  }
 
-  revalidatePath('/student')
-  return { success: true }
+    if (existing) {
+      await prisma.log.update({
+        where: { id: existing.id },
+        data: { ...rest, date: new Date(date) },
+      })
+    } else {
+      await prisma.log.create({
+        data: {
+          studentId: session.user.id,
+          date: new Date(date),
+          ...rest,
+        },
+      })
+    }
+
+    revalidatePath('/student')
+    return { success: true }
+  } catch (error) {
+    console.error('[createLog] Unexpected error:', error)
+    const message = error instanceof Error ? error.message : '不明なエラーが発生しました'
+    return { error: message }
+  }
 }
 
 const ReplySchema = z.object({
